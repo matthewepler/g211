@@ -1,3 +1,4 @@
+
 /* 
  *  Goes To Eleven 
  *  Matthew Epler for Human Condition Global, 2016
@@ -9,6 +10,8 @@
  *  LINK = [TBD]
 */
 
+#include <SoftwareSerial.h>
+SoftwareSerial mySerial (2, 3);
 
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
@@ -24,7 +27,7 @@ int localLED = 10;
 
 
 void setup() {
-  Serial.begin(9600);  
+  mySerial.begin(9600);
   pinMode(localLED, OUTPUT); // for debug only. not used in prod. env. 
 
   pixels.setBrightness(255);
@@ -32,34 +35,34 @@ void setup() {
 }
 
 void loop() {
-    if (Serial.available() > 21) {
-      if (Serial.peek() == 0x7e) {
+    if (mySerial.available() > 21) {
+      if (mySerial.peek() == 0x7e) {
         for (int i = 0; i < 22; i++) {
   
-          Serial.print(i);
-          Serial.print(":");
-          Serial.print(Serial.read(), HEX);
-          Serial.print(", ");
+          mySerial.print(i);
+          mySerial.print(":");
+          mySerial.print(Serial.read(), HEX);
+          mySerial.print(", ");
   
           if (i == 19) {
-            readValue = Serial.read();
+            readValue = mySerial.read();
           }
         }
         
-        Serial.print("-> "); // end of the line will show you the info you really need - state of switch. 
-        Serial.print(readValue, HEX);
+        mySerial.print("-> "); // end of the line will show you the info you really need - state of switch. 
+        mySerial.print(readValue, HEX);
         if (readValue == 0) {
           ledChange(127); // set neopixels to RGB 127, 127, 127
-          Serial.print(" Goes to 11!");
+          mySerial.print(" Goes to 11!");
           digitalWrite(localLED, HIGH);
           //setRemoteLED(0x5); for feedback on knob box. unnecessary but keeping so i can see how to do it later if need be
         } else if (readValue == 0x10) {
           ledChange(0); // set neopixels to RGB 0, 0, 0
-          Serial.print(" Turn it up!");
+          mySerial.print(" Turn it up!");
           digitalWrite(localLED, LOW);
           //setRemoteLED(0x4); unnecessary but keeping so i can see how to do it later if need be
         }
-        Serial.println();
+        mySerial.println();
       }
     }
 }
