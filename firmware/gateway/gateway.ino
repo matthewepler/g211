@@ -1,8 +1,9 @@
-// Sample RFM69 receiver/gateway sketch, with ACK and optional encryption, and Automatic Transmission Control
-// Passes through any wireless received messages to the serial port & responds to ACKs
-// It also looks for an onboard FLASH chip, if present
-// RFM69 library and sample code by Felix Rusu - http://LowPowerLab.com/contact
+// Based on RFM69 library sample sketch, "Gateway" by Felix Rusu - http://LowPowerLab.com/contact
 // Copyright Felix Rusu (2015)
+// Using Moteino R4 http://lowpowerlab.com
+
+// THE GATEWAY lives in the light and receives signals from the knob, which lives in the control box. 
+// M. Epler 04/2016
 
 #include <RFM69.h>    //get it here: https://www.github.com/lowpowerlab/rfm69
 #include <RFM69_ATC.h>//get it here: https://www.github.com/lowpowerlab/rfm69
@@ -11,21 +12,12 @@
 
 #define NODEID        1    //unique for each node on same network
 #define NETWORKID     100  //the same on all nodes that talk to each other
-//Match frequency to the hardware version of the radio on your Moteino (uncomment one):
 #define FREQUENCY     RF69_433MHZ
-//#define FREQUENCY     RF69_868MHZ
-//#define FREQUENCY     RF69_915MHZ
-#define ENCRYPTKEY    "sampleEncryptKey" //exactly the same 16 characters/bytes on all nodes!
-//#define IS_RFM69HW    //uncomment only for RFM69HW! Leave out if you have RFM69W!
+#define ENCRYPTKEY    "sampleEncryptKey" // not using
 #define ENABLE_ATC    //comment out this line to disable AUTO TRANSMISSION CONTROL
 
-#ifdef __AVR_ATmega1284P__
-#define LED           15 // Moteino MEGAs have LEDs on D15
-#define FLASH_SS      23 // and FLASH SS on D23
-#else
 #define LED           9 // Moteinos have LEDs on D9
 #define FLASH_SS      8 // and FLASH SS on D8
-#endif
 
 #ifdef ENABLE_ATC
 RFM69_ATC radio;
@@ -61,12 +53,12 @@ void setup() {
 }
 
 void loop() {
-  //process any serial input
+  //process any manually enetered serial input
   checkSerialPort();
 
-  if (radio.receiveDone())
+  if (radio.receiveDone()) // see rfm69.cpp
   {
-    Serial.println(radio.DATA[0]);
+    Serial.println(radio.DATA[0]); // only sending one byte from the control box ("node")  unit.
     char dataChar = (char)radio.DATA[0];
     // 'B' == ON, 'A' == OFF
     if (radio.DATA[0] == 66) lightEvent(127); else lightEvent(0);
@@ -80,6 +72,7 @@ void loop() {
   }
 }
 
+// Onboard Moteino LED used for feedback
 void Blink(byte PIN, int DELAY_MS)
 {
   pinMode(PIN, OUTPUT);
@@ -88,6 +81,8 @@ void Blink(byte PIN, int DELAY_MS)
   digitalWrite(PIN, LOW);
 }
 
+// NeoPixel LED Strip
+// White = 127, 127, 127
 void lightEvent(int val) {
   for (int i = 0; i < NUMPIXELS; i++) {
     pixels.setPixelColor(i, pixels.Color(val, val, val));
@@ -95,15 +90,12 @@ void lightEvent(int val) {
   }
 }
 
+// Initialize RFM69W, see rfm69.cpp
 void initRadio() {
   delay(10);
   radio.initialize(FREQUENCY, NODEID, NETWORKID);
-#ifdef IS_RFM69HW
-  radio.setHighPower(); //only for RFM69HW!
-#endif
   radio.encrypt(ENCRYPTKEY);
   radio.promiscuous(promiscuousMode);
-  //radio.setFrequency(919000000); //set frequency to some custom frequency
   char buff[50];
   sprintf(buff, "\nListening at %d Mhz...", FREQUENCY == RF69_433MHZ ? 433 : FREQUENCY == RF69_868MHZ ? 868 : 915);
   Serial.println(buff);
