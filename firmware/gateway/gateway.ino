@@ -41,7 +41,7 @@ uint32_t packetCount = 0;
 #include <avr/power.h>
 #endif
 #define LEDPIN         6
-#define NUMPIXELS      12
+#define NUMPIXELS      11
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
 
