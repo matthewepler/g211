@@ -56,26 +56,23 @@ void setup() {
 }
 
 void loop() {
-  Serial.println("Loop: " + loopCounter);
+  Serial.println("Loop: " + loopCounter++);
   Serial.println(digitalRead(readPin));
   
   if (millis() < 1000) sleepNow();
   
-  digitalWrite(powerLedPin, !digitalRead(readPin));
+  digitalWrite(powerLedPin, HIGH);
   
   if (digitalRead(readPin) == HIGH) {
     Serial.println("going to sleep now...");
-    payload[0] = 'A';
     sleepNow();
   }
 
   int currPeriod = millis() / TRANSMITPERIOD;
   if (currPeriod != lastPeriod) {
-    radio.sendWithRetry(GATEWAYID, payload, sendSize);
+    radio.send(GATEWAYID, payload, sendSize);
     lastPeriod = currPeriod;
   }
-
-  loopCounter++;
 }
 
 void wakeUp() {
@@ -85,6 +82,7 @@ void wakeUp() {
 
 void sleepNow() {
   payload[0] = 'A';
+  digitalWrite(powerLedPin, LOW);
   radio.send(GATEWAYID, payload, sendSize);
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);   // sleep mode is set here
   detachInterrupt(interruptPin);
