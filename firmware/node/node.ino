@@ -37,11 +37,11 @@ RFM69 radio;
 // ****** GOES TO 11 ********* //
 
 #include <avr/sleep.h>
-const int knobPin = A1;
 const byte powerLedPin = 4;
-const byte readPin = 8;
+const byte readPin = 5;
 const byte interruptPin = 1;
 char payload[] = "A"; // default = "off"
+int loopCounter;
 
 
 
@@ -50,18 +50,22 @@ void setup() {
   initRadio();
 
   // ***** GOES TO 11 *****
-  pinMode(knobPin, INPUT);
   pinMode(powerLedPin, OUTPUT);
   pinMode(readPin, INPUT);
+  loopCounter = 0;
 }
 
 void loop() {
+  Serial.println("Loop: " + loopCounter);
+  Serial.println(digitalRead(readPin));
+  
   if (millis() < 1000) sleepNow();
   
   digitalWrite(powerLedPin, !digitalRead(readPin));
   
   if (digitalRead(readPin) == HIGH) {
-//    Serial.println("going to sleep now...");
+    Serial.println("going to sleep now...");
+    payload[0] = 'A';
     sleepNow();
   }
 
@@ -70,6 +74,8 @@ void loop() {
     radio.sendWithRetry(GATEWAYID, payload, sendSize);
     lastPeriod = currPeriod;
   }
+
+  loopCounter++;
 }
 
 void wakeUp() {
@@ -79,10 +85,9 @@ void wakeUp() {
 
 void sleepNow() {
   payload[0] = 'A';
-  radio.sendWithRetry(GATEWAYID, payload, sendSize);
-  delay(250);
-  detachInterrupt(interruptPin);
+  radio.send(GATEWAYID, payload, sendSize);
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);   // sleep mode is set here
+  detachInterrupt(interruptPin);
   sleep_enable();          // enables the sleep bit in the mcucr register
   attachInterrupt(interruptPin, wakeUp, LOW);
   sleep_mode();
